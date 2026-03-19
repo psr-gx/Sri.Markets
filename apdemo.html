@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NutriScan – Know What You Eat</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0a0f0a;
+            --bg2: #111811;
+            --card: #151d15;
+            --card2: #1c261c;
+            --green: #4ade80;
+            --green2: #22c55e;
+            --amber: #fbbf24;
+            --red: #f87171;
+            --blue: #60a5fa;
+            --purple: #c084fc;
+            --text: #f0fdf0;
+            --muted: #6b7a6b;
+            --border: #1e2e1e;
+            --glow: rgba(74, 222, 128, 0.18);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden
+        }
+
+        /* ── GLOBAL ── */
+        .screen {
+            display: none;
+            animation: fadeUp .45s ease both
+        }
+
+        .screen.active {
+            display: block
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(22px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .45
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        @keyframes scanLine {
+            0% {
+                top: 8%
+            }
+
+            100% {
+                top: 88%
+            }
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: .7
+            }
+
+            100% {
+                transform: scale(2.8);
+                opacity: 0
+            }
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+
+            100% {
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes barGrow {
+            from {
+                width: 0
+            }
+
+            to {
+                width: var(--w)
+            }
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px;
+            background: rgba(10, 15, 10, .88);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -.5px;
+            color: var(--green)
+        }
+
+        .logo span {
+            color: var(--text)
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px
+        }
+
+        .nav-tab {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: .78rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+            color: var(--muted);
+            border: none;
+            background: none
+        }
+
+        .nav-tab.active,
+        .nav-tab:hover {
+            background: var(--card2);
+            color: var(--green)
+        }
+
+        .nav-badge {
+            background: var(--green);
+            color: #000;
+            font-size: .6rem;
+            font-weight: 700;
+            border-radius: 8px;
+            padding: 1px 5px;
+            margin-left: 4px
+        }
+
+        /* ── HERO / SCAN ── */
+        #screen-scan {
+            padding: 90px 20px 40px
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-size: .75rem;
+            color: var(--green);
+            margin-bottom: 28px;
+            font-family: 'Space Mono', monospace
+        }
+
+        .hero-tag::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 1.4s ease infinite
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 6vw, 3.4rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -1.5px;
+            margin-bottom: 16px
+        }
+
+        h1 em {
+            font-style: normal;
+            color: var(--green)
+        }
+
+        .hero-sub {
+            color: var(--muted);
+            font-size: 1rem;
+            max-width: 420px;
+            line-height: 1.6;
+            margin-bottom: 36px
+        }
+
+        .scan-box {
+            position: relative;
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto 36px;
+            aspect-ratio: 1;
+            border-radius: 24px;
+            overflow: hidden;
+            background: var(--card);
+            border: 1px solid var(--border)
+        }
+
+        .scan-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .scan-ring {
+            position: absolute;
+            inset: 0;
+            border: 2px solid transparent;
+            border-radius: 24px;
+            box-shadow: inset 0 0 40px var(--glow)
+        }
+
+        .corner {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-color: var(--green);
+            border-style: solid
+        }
+
+        .c-tl {
+            top: 14px;
+            left: 14px;
+            border-width: 3px 0 0 3px;
+            border-radius: 6px 0 0 0
+        }
+
+        .c-tr {
+            top: 14px;
+            right: 14px;
+            border-width: 3px 3px 0 0;
+            border-radius: 0 6px 0 0
+        }
+
+        .c-bl {
+            bottom: 14px;
+            left: 14px;
+            border-width: 0 0 3px 3px;
+            border-radius: 0 0 0 6px
+        }
+
+        .c-br {
+            bottom: 14px;
+            right: 14px;
+            border-width: 0 3px 3px 0;
+            border-radius: 0 0 6px 0
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--green), transparent);
+            box-shadow: 0 0 12px var(--green);
+            animation: scanLine 1.8s ease-in-out infinite alternate;
+            top: 10%
+        }
+
+        .scan-icon {
+            font-size: 3rem;
+            z-index: 2
+        }
+
+        .scan-hint {
+            font-size: .78rem;
+            color: var(--muted);
+            z-index: 2
+        }
+
+        .food-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-width: 360px;
+            margin: 0 auto 32px;
+            justify-content: center
+        }
+
+        .chip {
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: .78rem;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--card);
+            transition: all .2s;
+            font-family: 'Space Mono', monospace
+        }
+
+        .chip:hover,
+        .chip.sel {
+            background: var(--green);
+            color: #000;
+            border-color: var(--green);
+            font-weight: 700
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--green);
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 32px;
+            font-family: 'Syne', sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .22s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .btn-primary:hover {
+            background: var(--green2);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(74, 222, 128, .3)
+        }
+
+        .btn-sec {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-size: .88rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .btn-sec:hover {
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center
+        }
+
+        /* ── NUTRITION SCREEN ── */
+        #screen-nutrition {
+            padding: 90px 20px 50px
+        }
+
+        .food-hero {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 24px
+        }
+
+        .food-emoji {
+            font-size: 3.5rem;
+            width: 72px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card2);
+            border-radius: 16px;
+            flex-shrink: 0
+        }
+
+        .food-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800
+        }
+
+        .food-weight {
+            color: var(--muted);
+            font-size: .83rem;
+            margin-top: 4px;
+            font-family: 'Space Mono', monospace
+        }
+
+        .food-verified {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(74, 222, 128, .12);
+            color: var(--green);
+            font-size: .72rem;
+            border-radius: 20px;
+            padding: 3px 10px;
+            margin-top: 8px;
+            font-weight: 600
+        }
+
+        .macro-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .macro-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .macro-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent, var(--green))
+        }
+
+        .macro-label {
+            font-size: .72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            font-family: 'Space Mono', monospace;
+            margin-bottom: 6px
+        }
+
+        .macro-val {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800
+        }
+
+        .macro-unit {
+            font-size: .75rem;
+            color: var(--muted);
+            margin-left: 3px
+        }
+
+        .macro-bar-wrap {
+            height: 5px;
+            background: var(--border);
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden
+        }
+
+        .macro-bar {
+            height: 100%;
+            border-radius: 5px;
+            background: var(--accent, var(--green));
+            width: var(--w);
+            animation: barGrow .8s .3s ease both
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 14px;
+            letter-spacing: -.3px
+        }
+
+        .nutrient-list {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px
+        }
+
+        .nutrient-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .nutrient-row:last-child {
+            border-bottom: none
+        }
+
+        .nutrient-name {
+            font-size: .85rem
+        }
+
+        .nutrient-val {
+            font-family: 'Space Mono', monospace;
+            font-size: .82rem;
+            color: var(--green)
+        }
+
+        .nutrient-dv {
+            font-size: .72rem;
+            color: var(--muted);
+            margin-left: 8px
+        }
+
+        .health-score {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px
+        }
+
+        .score-circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 4px solid var(--green);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(74, 222, 128, .25)
+        }
+
+        .score-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--green)
+        }
+
+        .score-label {
+            font-size: .6rem;
+            color: var(--muted)
+        }
+
+        .score-desc {
+            font-size: .85rem;
+            line-height: 1.55;
+            color: var(--muted)
+        }
+
+        .score-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text)
+        }
+
+        /* ── COMPARE SCREEN ── */
+        #screen-compare {
+            padding: 90px 20px 50px
+        }
+
+        .compare-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .compare-food-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 8px 16px
+        }
+
+        .cb-emoji {
+            font-size: 1.2rem
+        }
+
+        .cb-text {
+            font-size: .85rem;
+            font-weight: 500
+        }
+
+        .best-badge {
+            background: rgba(74, 222, 128, .15);
+            color: var(--green);
+            border: 1px solid rgba(74, 222, 128, .3);
+            font-size: .65rem;
+            font-family: 'Space Mono', monospace;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-weight: 700
+        }
+
+        .app-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 12px;
+            transition: all .22s;
+            cursor: pointer
+        }
+
+        .app-card:hover {
+            border-color: var(--green);
+            background: var(--card2)
+        }
+
+        .app-card.best {
+            border-color: var(--green);
+            box-shadow: 0 0 0 1px var(--green), 0 8px 24px rgba(74, 222, 128, .12)
+        }
+
+        .app-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px
+        }
+
+        .app-info {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .app-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0
+        }
+
+        .app-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: .95rem
+        }
+
+        .app-rating {
+            font-size: .75rem;
+            color: var(--muted)
+        }
+
+        .app-price {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--green)
+        }
+
+        .app-price span {
+            font-size: .72rem;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 400
+        }
+
+        .app-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .meta-pill {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: .72rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .meta-pill.good {
+            color: var(--green);
+            border-color: rgba(74, 222, 128, .3)
+        }
+
+        .meta-pill.warn {
+            color: var(--amber);
+            border-color: rgba(251, 191, 36, .3)
+        }
+
+        .price-chart {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 24px
+        }
+
+        .price-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px
+        }
+
+        .pbar-label {
+            font-size: .78rem;
+            width: 80px;
+            flex-shrink: 0;
+            font-family: 'Space Mono', monospace;
+            color: var(--muted)
+        }
+
+        .pbar-track {
+            flex: 1;
+            height: 10px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden
+        }
+
+        .pbar-fill {
+            height: 100%;
+            border-radius: 10px;
+            animation: barGrow .7s ease both
+        }
+
+        .pbar-val {
+            font-family: 'Syne', sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            width: 52px;
+            text-align: right
+        }
+
+        /* ── DIET SCREEN ── */
+        #screen-diet {
+            padding: 90px 20px 50px
+        }
+
+        .plan-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 4px
+        }
+
+        .plan-tab {
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            border: 1px solid var(--border);
+            background: var(--card);
+            transition: all .2s
+        }
+
+        .plan-tab.active {
+            background: var(--green);
+            color: #000;
+            border-color: var(--green)
+        }
+
+        .plan-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .plan-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, var(--accent-glow, rgba(74, 222, 128, .15)) 0%, transparent 70%);
+            border-radius: 50%
+        }
+
+        .plan-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 6px
+        }
+
+        .plan-desc {
+            font-size: .83rem;
+            color: var(--muted);
+            margin-bottom: 14px;
+            line-height: 1.55
+        }
+
+        .plan-features {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px
+        }
+
+        .plan-feat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .82rem
+        }
+
+        .plan-feat::before {
+            content: '✓';
+            color: var(--green);
+            font-weight: 700;
+            font-size: .8rem
+        }
+
+        .plan-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-bottom: 14px
+        }
+
+        .plan-price {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800
+        }
+
+        .plan-period {
+            font-size: .78rem;
+            color: var(--muted)
+        }
+
+        .delivery-estimate {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 24px
+        }
+
+        .delivery-row {
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .delivery-icon {
+            font-size: 1.8rem;
+            animation: floatUp 2.5s ease infinite
+        }
+
+        .delivery-info {
+            flex: 1
+        }
+
+        .delivery-time {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--green)
+        }
+
+        .delivery-label {
+            font-size: .78rem;
+            color: var(--muted);
+            margin-top: 2px
+        }
+
+        .delivery-track {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            align-items: center
+        }
+
+        .track-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex: 1
+        }
+
+        .track-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border)
+        }
+
+        .track-dot.done {
+            background: var(--green);
+            box-shadow: 0 0 8px rgba(74, 222, 128, .5)
+        }
+
+        .track-dot.current {
+            background: var(--amber);
+            animation: pulse 1s infinite;
+            box-shadow: 0 0 8px rgba(251, 191, 36, .5)
+        }
+
+        .track-line {
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+            position: relative;
+            top: -18px;
+            margin: 0 -10px;
+            z-index: 0
+        }
+
+        .track-label {
+            font-size: .62rem;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 2px
+        }
+
+        .meal-timeline {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden
+        }
+
+        .meal-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .meal-row:last-child {
+            border-bottom: none
+        }
+
+        .meal-time {
+            font-family: 'Space Mono', monospace;
+            font-size: .72rem;
+            color: var(--muted);
+            width: 48px;
+            flex-shrink: 0
+        }
+
+        .meal-emoji {
+            font-size: 1.4rem;
+            width: 36px;
+            text-align: center
+        }
+
+        .meal-name {
+            font-size: .88rem;
+            font-weight: 500;
+            flex: 1
+        }
+
+        .meal-cal {
+            font-family: 'Space Mono', monospace;
+            font-size: .75rem;
+            color: var(--amber)
+        }
+
+        .meal-status {
+            font-size: .7rem;
+            border-radius: 20px;
+            padding: 3px 8px
+        }
+
+        .meal-status.delivered {
+            background: rgba(74, 222, 128, .12);
+            color: var(--green)
+        }
+
+        .meal-status.pending {
+            background: rgba(251, 191, 36, .12);
+            color: var(--amber)
+        }
+
+        /* ── BOTTOM NAV (mobile feel) ── */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            background: rgba(10, 15, 10, .95);
+            backdrop-filter: blur(18px);
+            border-top: 1px solid var(--border);
+            padding: 8px 0 max(8px, env(safe-area-inset-bottom))
+        }
+
+        .bnav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            padding: 4px 0;
+            transition: all .2s
+        }
+
+        .bnav-icon {
+            font-size: 1.3rem
+        }
+
+        .bnav-label {
+            font-size: .62rem;
+            color: var(--muted);
+            font-family: 'Space Mono', monospace
+        }
+
+        .bnav-item.active .bnav-label {
+            color: var(--green)
+        }
+
+        .bnav-item.active .bnav-icon {
+            filter: drop-shadow(0 0 8px var(--green))
+        }
+
+        /* ── LOADING ── */
+        .scan-loading {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            gap: 20px
+        }
+
+        .scan-loading.show {
+            display: flex
+        }
+
+        .spinner {
+            width: 56px;
+            height: 56px;
+            border: 3px solid var(--border);
+            border-top-color: var(--green);
+            border-radius: 50%;
+            animation: spin .8s linear infinite
+        }
+
+        .loading-text {
+            font-family: 'Space Mono', monospace;
+            font-size: .82rem;
+            color: var(--muted);
+            animation: pulse 1s infinite
+        }
+
+        /* ── MISC ── */
+        .w-full {
+            width: 100%
+        }
+
+        .text-center {
+            text-align: center
+        }
+
+        .pb-nav {
+            padding-bottom: 80px
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .72rem;
+            font-family: 'Space Mono', monospace;
+            color: var(--muted);
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3px 10px
+        }
+
+        .gap-8 {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .section-desc {
+            font-size: .83rem;
+            color: var(--muted);
+            margin-bottom: 18px;
+            line-height: 1.55
+        }
+
+        @media(min-width:640px) {
+
+            #screen-scan,
+            #screen-nutrition,
+            #screen-compare,
+            #screen-diet {
+                max-width: 520px;
+                margin: 0 auto
+            }
+
+            .macro-grid {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <div class="logo">Nutri<span>Scan</span></div>
+        <div class="nav-tabs" id="navTabs">
+            <button class="nav-tab active" onclick="goScreen('scan')">🔬 Scan</button>
+            <button class="nav-tab" onclick="goScreen('nutrition')">📊 Nutrition</button>
+            <button class="nav-tab" onclick="goScreen('compare')">💰 Compare</button>
+            <button class="nav-tab" onclick="goScreen('diet')">🥗 Diet</button>
+        </div>
+    </nav>
+
+    <!-- ═══════════════ SCAN SCREEN ═══════════════ -->
+    <div id="screen-scan" class="screen active pb-nav">
+        <div class="text-center" style="padding-top:10px">
+            <div class="hero-tag">AI-Powered Food Intelligence</div>
+            <h1>Scan. Know.<br /><em>Eat Smart.</em></h1>
+            <p class="hero-sub" style="margin:0 auto 28px">Point your camera at any food item — milk, grains, pulses,
+                vegetables — and instantly know what's inside it.</p>
+        </div>
+
+        <div class="scan-box" id="scanBox">
+            <div class="scan-ring"></div>
+            <div class="corner c-tl"></div>
+            <div class="corner c-tr"></div>
+            <div class="corner c-bl"></div>
+            <div class="corner c-br"></div>
+            <div class="scan-line"></div>
+            <div class="scan-inner">
+                <div class="scan-icon" id="scanEmoji">📷</div>
+                <div class="scan-hint">Tap a food item below to demo</div>
+            </div>
+        </div>
+
+        <p
+            style="text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:14px;font-family:'Space Mono',monospace">
+            — OR SELECT A FOOD —</p>
+        <div class="food-chips" id="foodChips">
+            <div class="chip" onclick="selectFood('milk')">🥛 Milk</div>
+            <div class="chip" onclick="selectFood('rice')">🍚 Rice</div>
+            <div class="chip" onclick="selectFood('lentils')">🫘 Lentils</div>
+            <div class="chip" onclick="selectFood('egg')">🥚 Egg</div>
+            <div class="chip" onclick="selectFood('banana')">🍌 Banana</div>
+            <div class="chip" onclick="selectFood('almonds')">🌰 Almonds</div>
+            <div class="chip" onclick="selectFood('wheat')">🌾 Wheat Flour</div>
+            <div class="chip" onclick="selectFood('oats')">🥣 Oats</div>
+        </div>
+
+        <div class="text-center" style="margin-top:10px">
+            <button class="btn-primary" onclick="startScan()" id="scanBtn" disabled style="opacity:.4">
+                <span>⚡</span> Analyze Food
+            </button>
+        </div>
+
+        <!-- Features strip -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:36px">
+            <div
+                style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center">
+                <div style="font-size:1.6rem;margin-bottom:6px">🧬</div>
+                <div style="font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700">Full Nutrition</div>
+                <div style="font-size:.7rem;color:var(--muted);margin-top:3px">Macros, micros & vitamins</div>
+            </div>
+            <div
+                style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center">
+                <div style="font-size:1.6rem;margin-bottom:6px">🏪</div>
+                <div style="font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700">Price Compare</div>
+                <div style="font-size:.7rem;color:var(--muted);margin-top:3px">Blinkit, Swiggy & more</div>
+            </div>
+            <div
+                style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center">
+                <div style="font-size:1.6rem;margin-bottom:6px">🥗</div>
+                <div style="font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700">Diet Plans</div>
+                <div style="font-size:.7rem;color:var(--muted);margin-top:3px">Custom delivery schedule</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ NUTRITION SCREEN ═══════════════ -->
+    <div id="screen-nutrition" class="screen pb-nav">
+
+        <!-- Loading -->
+        <div class="scan-loading" id="scanLoading">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loadingText">Scanning food item...</div>
+        </div>
+
+        <!-- Result -->
+        <div id="nutritionResult" style="display:none">
+            <div class="food-hero">
+                <div class="food-emoji" id="resultEmoji">🥛</div>
+                <div>
+                    <div class="food-title" id="resultName">Whole Milk</div>
+                    <div class="food-weight" id="resultWeight">Per 100ml serving</div>
+                    <div class="food-verified">✓ FSSAI Verified Data</div>
+                </div>
+            </div>
+
+            <!-- Macros -->
+            <div class="macro-grid" id="macroGrid">
+                <!-- filled by JS -->
+            </div>
+
+            <div class="section-title">Full Nutritional Breakdown</div>
+            <div class="nutrient-list" id="nutrientList"></div>
+
+            <!-- Health score -->
+            <div class="health-score">
+                <div class="score-circle">
+                    <div class="score-num" id="healthScore">78</div>
+                    <div class="score-label">/ 100</div>
+                </div>
+                <div>
+                    <div class="score-title" id="healthTitle">Good Choice</div>
+                    <div class="score-desc" id="healthDesc">Rich in calcium and protein. Moderate in saturated fat.
+                        Excellent for daily diet when consumed in recommended amounts.</div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-primary" onclick="goScreen('compare')">💰 See Price Comparison</button>
+                <button class="btn-sec" onclick="goScreen('diet')">🥗 Add to Diet Plan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ COMPARE SCREEN ═══════════════ -->
+    <div id="screen-compare" class="screen pb-nav">
+        <div class="compare-header">
+            <div class="compare-food-badge">
+                <div class="cb-emoji" id="cmpEmoji">🥛</div>
+                <div class="cb-text" id="cmpName">Whole Milk</div>
+            </div>
+            <div class="tag">1 Litre</div>
+        </div>
+
+        <!-- Price bar chart -->
+        <div class="price-chart">
+            <div class="section-title" style="margin-bottom:16px">Price at a Glance</div>
+            <div id="priceChart"></div>
+        </div>
+
+        <div class="section-title">Compare on Apps</div>
+        <div class="section-desc">Tap any card to see delivery estimate</div>
+        <div id="appCards"></div>
+
+        <div class="btn-row" style="margin-top:16px">
+            <button class="btn-primary" onclick="goScreen('diet')">🥗 Build Diet Plan</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════ DIET SCREEN ═══════════════ -->
+    <div id="screen-diet" class="screen pb-nav">
+        <h1 style="font-size:1.6rem;margin-bottom:6px">Your Diet <em>Plan</em></h1>
+        <p class="section-desc">Personalized meal delivery — on time, every day.</p>
+
+        <!-- Delivery estimate strip -->
+        <div class="delivery-estimate">
+            <div class="delivery-row">
+                <div class="delivery-icon">🛵</div>
+                <div class="delivery-info">
+                    <div class="delivery-time">28–35 min</div>
+                    <div class="delivery-label">Estimated delivery for your area · Hyderabad</div>
+                </div>
+            </div>
+            <div class="delivery-track" style="margin-top:16px">
+                <div class="track-step">
+                    <div class="track-dot done"></div>
+                    <div class="track-label">Order<br />Placed</div>
+                </div>
+                <div class="track-line"></div>
+                <div class="track-step">
+                    <div class="track-dot done"></div>
+                    <div class="track-label">Preparing<br />Meal</div>
+                </div>
+                <div class="track-line"></div>
+                <div class="track-step">
+                    <div class="track-dot current"></div>
+                    <div class="track-label">Out for<br />Delivery</div>
+                </div>
+                <div class="track-line"></div>
+                <div class="track-step">
+                    <div class="track-dot"></div>
+                    <div class="track-label">Delivered</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan tabs -->
+        <div class="plan-tabs" id="planTabs">
+            <button class="plan-tab active" onclick="selectPlan('weight')">⚡ Weight Loss</button>
+            <button class="plan-tab" onclick="selectPlan('muscle')">💪 Muscle Gain</button>
+            <button class="plan-tab" onclick="selectPlan('balanced')">🌿 Balanced</button>
+            <button class="plan-tab" onclick="selectPlan('diabetic')">🩺 Diabetic</button>
+        </div>
+
+        <!-- Plan details card -->
+        <div id="planCard"></div>
+
+        <!-- Today's meal schedule -->
+        <div class="section-title" style="margin-top:20px">Today's Delivery Schedule</div>
+        <div class="meal-timeline" id="mealTimeline"></div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <div class="bnav-item active" id="bnav-scan" onclick="goScreen('scan')">
+            <div class="bnav-icon">🔬</div>
+            <div class="bnav-label">Scan</div>
+        </div>
+        <div class="bnav-item" id="bnav-nutrition" onclick="goScreen('nutrition')">
+            <div class="bnav-icon">📊</div>
+            <div class="bnav-label">Nutrition</div>
+        </div>
+        <div class="bnav-item" id="bnav-compare" onclick="goScreen('compare')">
+            <div class="bnav-icon">💰</div>
+            <div class="bnav-label">Compare</div>
+        </div>
+        <div class="bnav-item" id="bnav-diet" onclick="goScreen('diet')">
+            <div class="bnav-icon">🥗</div>
+            <div class="bnav-label">Diet</div>
+        </div>
+    </div>
+
+    <script>
+        /* ─── DATA ─── */
+        const FOODS = {
+            milk: {
+                name: "Whole Milk", emoji: "🥛", weight: "Per 100ml", macros: [
+                    { label: "Energy", val: 61, unit: "kcal", pct: 8, accent: "#fbbf24" },
+                    { label: "Protein", val: 3.2, unit: "g", pct: 55, accent: "#4ade80" },
+                    { label: "Total Fat", val: 3.5, unit: "g", pct: 28, accent: "#f87171" },
+                    { label: "Carbs", val: 4.8, unit: "g", pct: 20, accent: "#60a5fa" }
+                ], nutrients: [
+                    { n: "Saturated Fat", v: "2.1 g", dv: "11%" },
+                    { n: "Cholesterol", v: "10 mg", dv: "3%" },
+                    { n: "Sodium", v: "44 mg", dv: "2%" },
+                    { n: "Calcium", v: "113 mg", dv: "11%" },
+                    { n: "Vitamin D", v: "1.2 µg", dv: "6%" },
+                    { n: "Vitamin B12", v: "0.44 µg", dv: "18%" },
+                    { n: "Potassium", v: "150 mg", dv: "3%" },
+                    { n: "Phosphorus", v: "85 mg", dv: "7%" }
+                ], score: 78, scoreTitle: "Good Choice", scoreDesc: "Rich in calcium and protein. Moderate in saturated fat. Excellent for daily diet in recommended amounts.",
+                prices: [{ app: "Blinkit", logo: "💚", bg: "#1a2f1a", price: 64, delivery: 15, rating: "4.8", offers: "5% off", icon: "⚡" },
+                { app: "Swiggy Instamart", logo: "🧡", bg: "#2f1f0e", price: 67, delivery: 20, rating: "4.6", offers: "Free delivery", icon: "🛵" },
+                { app: "Zepto", logo: "💜", bg: "#1e1a2f", price: 62, delivery: 12, rating: "4.7", offers: "10 coins", icon: "⚡" },
+                { app: "BigBasket", logo: "💛", bg: "#2a2800", price: 70, delivery: 40, rating: "4.5", offers: "₹20 cashback", icon: "🛒" }]
+            },
+            rice: {
+                name: "Basmati Rice", emoji: "🍚", weight: "Per 100g dry", macros: [
+                    { label: "Energy", val: 349, unit: "kcal", pct: 30, accent: "#fbbf24" },
+                    { label: "Protein", val: 7.5, unit: "g", pct: 48, accent: "#4ade80" },
+                    { label: "Total Fat", val: 0.5, unit: "g", pct: 5, accent: "#f87171" },
+                    { label: "Carbs", val: 78, unit: "g", pct: 80, accent: "#60a5fa" }
+                ], nutrients: [
+                    { n: "Dietary Fiber", v: "0.4 g", dv: "1%" },
+                    { n: "Sugar", v: "0.1 g", dv: "0%" },
+                    { n: "Sodium", v: "5 mg", dv: "0%" },
+                    { n: "Iron", v: "0.8 mg", dv: "4%" },
+                    { n: "Magnesium", v: "23 mg", dv: "5%" },
+                    { n: "Zinc", v: "1.1 mg", dv: "10%" },
+                    { n: "Thiamine B1", v: "0.07 mg", dv: "6%" },
+                    { n: "Niacin B3", v: "1.6 mg", dv: "10%" }
+                ], score: 72, scoreTitle: "Good Carb Source", scoreDesc: "High energy from complex carbohydrates. Low in fat. Pair with dal or vegetables for a complete meal.",
+                prices: [{ app: "Blinkit", logo: "💚", bg: "#1a2f1a", price: 130, delivery: 18, rating: "4.8", offers: "Free delivery", icon: "⚡" },
+                { app: "Swiggy Instamart", logo: "🧡", bg: "#2f1f0e", price: 125, delivery: 22, rating: "4.6", offers: "5% off", icon: "🛵" },
+                { app: "Zepto", logo: "💜", bg: "#1e1a2f", price: 118, delivery: 14, rating: "4.7", offers: "BEST PRICE", icon: "⚡" },
+                { app: "BigBasket", logo: "💛", bg: "#2a2800", price: 140, delivery: 45, rating: "4.5", offers: "₹30 cashback", icon: "🛒" }]
+            },
+            lentils: {
+                name: "Red Lentils (Masoor Dal)", emoji: "🫘", weight: "Per 100g dry", macros: [
+                    { label: "Energy", val: 352, unit: "kcal", pct: 28, accent: "#fbbf24" },
+                    { label: "Protein", val: 24, unit: "g", pct: 80, accent: "#4ade80" },
+                    { label: "Total Fat", val: 1.1, unit: "g", pct: 8, accent: "#f87171" },
+                    { label: "Carbs", val: 60, unit: "g", pct: 65, accent: "#60a5fa" }
+                ], nutrients: [
+                    { n: "Dietary Fiber", v: "10.7 g", dv: "43%" },
+                    { n: "Folate", v: "479 µg", dv: "120%" },
+                    { n: "Iron", v: "7.5 mg", dv: "42%" },
+                    { n: "Potassium", v: "677 mg", dv: "14%" },
+                    { n: "Magnesium", v: "47 mg", dv: "11%" },
+                    { n: "Zinc", v: "3.3 mg", dv: "30%" },
+                    { n: "Phosphorus", v: "281 mg", dv: "22%" },
+                    { n: "Vitamin B1", v: "0.87 mg", dv: "72%" }
+                ], score: 91, scoreTitle: "Superfood!", scoreDesc: "Exceptional plant protein source. Very high in folate, iron and fiber. Ideal for vegetarians and anyone building a healthy diet.",
+                prices: [{ app: "Blinkit", logo: "💚", bg: "#1a2f1a", price: 95, delivery: 15, rating: "4.8", offers: "BEST PRICE", icon: "⚡" },
+                { app: "Swiggy Instamart", logo: "🧡", bg: "#2f1f0e", price: 102, delivery: 20, rating: "4.6", offers: "Free delivery", icon: "🛵" },
+                { app: "Zepto", logo: "💜", bg: "#1e1a2f", price: 98, delivery: 13, rating: "4.7", offers: "5 coins", icon: "⚡" },
+                { app: "BigBasket", logo: "💛", bg: "#2a2800", price: 88, delivery: 50, rating: "4.5", offers: "₹15 cashback", icon: "🛒" }]
+            },
+            egg: {
+                name: "Chicken Egg (Large)", emoji: "🥚", weight: "Per 1 egg (60g)", macros: [
+                    { label: "Energy", val: 78, unit: "kcal", pct: 10, accent: "#fbbf24" },
+                    { label: "Protein", val: 6.3, unit: "g", pct: 68, accent: "#4ade80" },
+                    { label: "Total Fat", val: 5.3, unit: "g", pct: 42, accent: "#f87171" },
+                    { label: "Carbs", val: 0.6, unit: "g", pct: 3, accent: "#60a5fa" }
+                ], nutrients: [
+                    { n: "Cholesterol", v: "186 mg", dv: "62%" },
+                    { n: "Vitamin D", v: "1.1 µg", dv: "6%" },
+                    { n: "Vitamin B12", v: "0.6 µg", dv: "25%" },
+                    { n: "Vitamin A", v: "70 µg", dv: "8%" },
+                    { n: "Selenium", v: "15.4 µg", dv: "28%" },
+                    { n: "Choline", v: "147 mg", dv: "27%" },
+                    { n: "Iron", v: "0.9 mg", dv: "5%" },
+                    { n: "Zinc", v: "0.6 mg", dv: "5%" }
+                ], score: 85, scoreTitle: "Excellent Protein", scoreDesc: "Complete protein with all essential amino acids. High in choline for brain health. The gold standard for bioavailable protein.",
+                prices: [{ app: "Blinkit", logo: "💚", bg: "#1a2f1a", price: 72, delivery: 12, rating: "4.8", offers: "BEST PRICE", icon: "⚡" },
+                { app: "Swiggy Instamart", logo: "🧡", bg: "#2f1f0e", price: 75, delivery: 18, rating: "4.6", offers: "5% off", icon: "🛵" },
+                { app: "Zepto", logo: "💜", bg: "#1e1a2f", price: 73, delivery: 11, rating: "4.7", offers: "Free delivery", icon: "⚡" },
+                { app: "BigBasket", logo: "💛", bg: "#2a2800", price: 80, delivery: 42, rating: "4.5", offers: "₹10 cashback", icon: "🛒" }]
+            },
+            banana: {
+                name: "Banana", emoji: "🍌", weight: "Per 1 medium (120g)", macros: [
+                    { label: "Energy", val: 105, unit: "kcal", pct: 12, accent: "#fbbf24" },
+                    { label: "Protein", val: 1.3, unit: "g", pct: 15, accent: "#4ade80" },
+                    { label: "Total Fat", val: 0.4, unit: "g", pct: 3, accent: "#f87171" },
+                    { label: "Carbs", val: 27, unit: "g", pct: 52, accent: "#60a5fa" }
+                ], nutrients: [
+                    { n: "Sugar", v: "14.4 g", dv: "" },
+                    { n: "Dietary Fiber", v: "3.1 g", dv: "12%" },
+                    { n: "Potassium", v: "422 mg", dv: "9%" },
+                    { n: "Vitamin C", v: "10.3 mg", dv: "11%" },
+                    { n: "Vitamin B6", v: "0.43 mg", dv: "25%" },
+                    { n: "Magnesium", v: "32 mg", dv: "8%" },
+                    { n: "Folate", v: "23.6 µg", dv: "6%" },
+                    { n: "Manganese", v: "0.32 mg", dv: "14%" }
+                ], score: 82, scoreTitle: "Natural Energy Boost", scoreDesc: "Great pre-workout snack. High in potassium for muscle function. Natural sugars for quick energy with fiber to slow absorption.",
+                prices: [{ app: "Blinkit", logo: "💚", bg: "#1a2f1a", price: 35, delivery: 14, rating: "4.8", offers: "BEST PRICE", icon: "⚡" },
+                { app: "Swiggy Instamart", logo: "🧡", bg: "#2f1f0e", price: 40, delivery: 19, rating: "4.6", offers: "Buy 2 get 1", icon: "🛵" },
+                { app: "Zepto", logo: "💜", bg: "#1e1a2f", price: 38, delivery: 10, rating: "4.7", offers: "5 coins", icon: "⚡" },
+                { app: "BigBasket", logo: "💛", bg: "#2a2800", price: 45, delivery: 38, rating: "4.5", offers: "₹8 cashback", icon: "🛒" }]
+            },
+            almonds: {
+                name: "Almonds", emoji: "🌰", weight: "Per 28g (1 oz)", macros: [
+                    { label: "Energy", val: 164, unit: "kcal", pct: 18, accent: "#fbbf24" },
+                    { label: "Protein", val: 6, unit: "g", pct: 55, accent: "#4ade80" },
+                    { label: "Total Fat", val: 14, unit: "g", pct: 72, accent: "#f87171" },
+                    { label: "Carbs", val: 6.1, unit: "g", pct: 22, accent: "#60a5fa" }
+                ], nutrients: [
+                    { n: "Monounsat. Fat", v: "9 g", dv: "" },
+                    { n: "Dietary Fiber", v: "3.5 g", dv: "13%" },
+                    { n: "Vitamin E", v: "7.3 mg", dv: "49%" },
+                    { n: "Magnesium", v: "76.5 mg", dv: "18%" },
+                    { n: "Calcium", v: "76.3 mg", dv: "6%" },
+                    { n: "Iron", v: "1.1 mg", dv: "6%" },
+                    { n: "Phosphorus", v: "136 mg", dv: "11%" },
+                    { n: "Riboflavin B2", v: "0.32 mg", dv: "25%" }
+                ], score: 88, scoreTitle: "Heart Healthy Snack", scoreDesc: "Excellent source of healthy fats and Vitamin E. Great for heart health, skin, and sustained energy. A handful a day is ideal.",
+                prices: [{ app: "Blinkit", logo: "💚", bg: "#1a2f1a", price: 299, delivery: 16, rating: "4.8", offers: "5% off", icon: "⚡" },
+                { app: "Swiggy Instamart", logo: "🧡", bg: "#2f1f0e", price: 315, delivery: 21, rating: "4.6", offers: "Free delivery", icon: "🛵" },
+                { app: "Zepto", logo: "💜", bg: "#1e1a2f", price: 289, delivery: 13, rating: "4.7", offers: "BEST PRICE", icon: "⚡" },
+                { app: "BigBasket", logo: "💛", bg: "#2a2800", price: 310, delivery: 44, rating: "4.5", offers: "₹50 cashback", icon: "🛒" }]
+            },
+            wheat: {
+                name: "Whole Wheat Flour (Atta)", emoji: "🌾", weight: "Per 100g", macros: [
+                    { label: "Energy", val: 340, unit: "kcal", pct: 28, accent: "#fbbf24" },
+                    { label: "Protein", val: 13, unit: "g", pct: 72, accent: "#4ade80" },
+                    { label: "Total Fat", val: 2.5, unit: "g", pct: 18, accent: "#f87171" },
+                    { label: "Carbs", val: 70, unit: "g", pct: 75, accent: "#60a5fa" }
+                ], nutrients: [
+                    { n: "Dietary Fiber", v: "10.7 g", dv: "43%" },
+                    { n: "Iron", v: "3.9 mg", dv: "22%" },
+                    { n: "Magnesium", v: "138 mg", dv: "33%" },
+                    { n: "Phosphorus", v: "357 mg", dv: "29%" },
+                    { n: "Zinc", v: "2.9 mg", dv: "26%" },
+                    { n: "Selenium", v: "70.7 µg", dv: "129%" },
+                    { n: "Thiamine B1", v: "0.5 mg", dv: "42%" },
+                    { n: "Niacin B3", v: "6.8 mg", dv: "43%" }
+                ], score: 80, scoreTitle: "Wholesome Staple", scoreDesc: "High-fiber whole grain packed with B vitamins, iron and minerals. Much superior to refined flour for everyday cooking.",
+                prices: [{ app: "Blinkit", logo: "💚", bg: "#1a2f1a", price: 55, delivery: 15, rating: "4.8", offers: "BEST PRICE", icon: "⚡" },
+                { app: "Swiggy Instamart", logo: "🧡", bg: "#2f1f0e", price: 60, delivery: 22, rating: "4.6", offers: "Free delivery", icon: "🛵" },
+                { app: "Zepto", logo: "💜", bg: "#1e1a2f", price: 58, delivery: 12, rating: "4.7", offers: "5 coins", icon: "⚡" },
+                { app: "BigBasket", logo: "💛", bg: "#2a2800", price: 65, delivery: 45, rating: "4.5", offers: "₹12 cashback", icon: "🛒" }]
+            },
+            oats: {
+                name: "Rolled Oats", emoji: "🥣", weight: "Per 100g dry", macros: [
+                    { label: "Energy", val: 389, unit: "kcal", pct: 32, accent: "#fbbf24" },
+                    { label: "Protein", val: 16.9, unit: "g", pct: 85, accent: "#4ade80" },
+                    { label: "Total Fat", val: 6.9, unit: "g", pct: 40, accent: "#f87171" },
+                    { label: "Carbs", val: 66, unit: "g", pct: 68, accent: "#60a5fa" }
+                ], nutrients: [
+                    { n: "Beta-glucan", v: "4 g", dv: "" },
+                    { n: "Dietary Fiber", v: "10.6 g", dv: "42%" },
+                    { n: "Manganese", v: "3.6 mg", dv: "157%" },
+                    { n: "Iron", v: "4.7 mg", dv: "26%" },
+                    { n: "Magnesium", v: "138 mg", dv: "33%" },
+                    { n: "Zinc", v: "4.0 mg", dv: "36%" },
+                    { n: "Phosphorus", v: "523 mg", dv: "42%" },
+                    { n: "Selenium", v: "34.4 µg", dv: "62%" }
+                ], score: 93, scoreTitle: "Top Superfood", scoreDesc: "Beta-glucan fiber reduces cholesterol. Highest protein of any grain. Excellent for heart health, blood sugar control and satiety.",
+                prices: [{ app: "Blinkit", logo: "💚", bg: "#1a2f1a", price: 145, delivery: 17, rating: "4.8", offers: "10% off", icon: "⚡" },
+                { app: "Swiggy Instamart", logo: "🧡", bg: "#2f1f0e", price: 150, delivery: 23, rating: "4.6", offers: "Free delivery", icon: "🛵" },
+                { app: "Zepto", logo: "💜", bg: "#1e1a2f", price: 138, delivery: 11, rating: "4.7", offers: "BEST PRICE", icon: "⚡" },
+                { app: "BigBasket", logo: "💛", bg: "#2a2800", price: 160, delivery: 48, rating: "4.5", offers: "₹25 cashback", icon: "🛒" }]
+            }
+        };
+
+        const PLANS = {
+            weight: { name: "Weight Loss Plan", emoji: "⚡", accent: "#4ade80", glow: "rgba(74,222,128,.15)", desc: "Calorie-controlled meals designed to burn fat while preserving muscle. Macro-balanced with high protein and fiber.", feats: ["1200–1500 kcal/day", "High protein, low carb meals", "Fresh green salads & soups", "3 deliveries per day", "Weekly nutritionist check-in"], price: "₹2,499", period: "/month" },
+            muscle: { name: "Muscle Gain Plan", emoji: "💪", accent: "#60a5fa", glow: "rgba(96,165,250,.15)", desc: "High-calorie, protein-rich meals to support muscle building and recovery. Perfectly timed around workouts.", feats: ["2800–3200 kcal/day", "30–40g protein per meal", "Post-workout recovery shakes", "4 meals + 2 snacks/day", "Custom macro tracking"], price: "₹3,299", period: "/month" },
+            balanced: { name: "Balanced Wellness Plan", emoji: "🌿", accent: "#a3e635", glow: "rgba(163,230,53,.15)", desc: "Wholesome, nutrient-dense meals inspired by traditional Indian diet science. Balanced for sustained energy all day.", feats: ["2000–2200 kcal/day", "Seasonal vegetables & pulses", "Probiotic-rich foods included", "3 meals + 1 snack/day", "Ayurveda-inspired recipes"], price: "₹1,999", period: "/month" },
+            diabetic: { name: "Diabetic-Friendly Plan", emoji: "🩺", accent: "#f9a8d4", glow: "rgba(249,168,212,.15)", desc: "Low glycemic index meals designed to stabilise blood sugar. Doctor-approved with regular glucose guidance.", feats: ["Low GI food only (GI < 55)", "No refined sugar or maida", "High fiber for glucose control", "5 small meals/day", "Glucose log integration"], price: "₹2,799", period: "/month" }
+        };
+
+        const MEALS = [
+            { time: "07:30", emoji: "🥣", name: "Overnight Oats with Banana & Almonds", cal: 380, status: "delivered" },
+            { time: "10:30", emoji: "🍎", name: "Morning Snack – Apple + Boiled Egg", cal: 145, status: "delivered" },
+            { time: "13:00", emoji: "🍛", name: "Lunch – Dal Rice + Mixed Vegetable Sabzi", cal: 520, status: "delivered" },
+            { time: "16:00", emoji: "☕", name: "Evening Snack – Roasted Chana + Green Tea", cal: 165, status: "pending" },
+            { time: "20:00", emoji: "🫕", name: "Dinner – Multigrain Roti + Paneer Bhurji + Salad", cal: 450, status: "pending" },
+        ];
+
+        /* ─── STATE ─── */
+        let currentFood = null;
+        let currentPlan = 'weight';
+
+        /* ─── NAVIGATION ─── */
+        function goScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+            document.querySelectorAll('.nav-tab').forEach((t, i) => {
+                const map = ['scan', 'nutrition', 'compare', 'diet'];
+                t.classList.toggle('active', map[i] === id);
+            });
+            document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById('bnav-' + id).classList.add('active');
+            if (id === 'nutrition' && currentFood) renderNutrition();
+            if (id === 'compare' && currentFood) renderCompare();
+            if (id === 'diet') renderDiet();
+        }
+
+        /* ─── FOOD SELECTION ─── */
+        function selectFood(key) {
+            currentFood = key;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+            event.target.classList.add('sel');
+            document.getElementById('scanEmoji').textContent = FOODS[key].emoji;
+            const btn = document.getElementById('scanBtn');
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+
+        /* ─── SCAN FLOW ─── */
+        function startScan() {
+            if (!currentFood) return;
+            goScreen('nutrition');
+            const loading = document.getElementById('scanLoading');
+            const result = document.getElementById('nutritionResult');
+            loading.classList.add('show');
+            result.style.display = 'none';
+            const steps = ['Scanning item…', 'Identifying food…', 'Fetching nutrition data…', 'Verifying with FSSAI…', 'Done!'];
+            let i = 0;
+            const t = setInterval(() => {
+                if (i < steps.length) { document.getElementById('loadingText').textContent = steps[i++]; }
+                else { clearInterval(t); loading.classList.remove('show'); result.style.display = 'block'; }
+            }, 600);
+        }
+
+        /* ─── RENDER NUTRITION ─── */
+        function renderNutrition() {
+            if (!currentFood) return;
+            const f = FOODS[currentFood];
+            document.getElementById('resultEmoji').textContent = f.emoji;
+            document.getElementById('resultName').textContent = f.name;
+            document.getElementById('resultWeight').textContent = f.weight;
+            document.getElementById('healthScore').textContent = f.score;
+            document.getElementById('healthTitle').textContent = f.scoreTitle;
+            document.getElementById('healthDesc').textContent = f.scoreDesc;
+
+            const mg = document.getElementById('macroGrid');
+            mg.innerHTML = f.macros.map(m => `
+    <div class="macro-card" style="--accent:${m.accent}">
+      <div class="macro-label">${m.label}</div>
+      <div class="macro-val">${m.val}<span class="macro-unit">${m.unit}</span></div>
+      <div class="macro-bar-wrap"><div class="macro-bar" style="--w:${m.pct}%;background:${m.accent}"></div></div>
+    </div>`).join('');
+
+            const nl = document.getElementById('nutrientList');
+            nl.innerHTML = f.nutrients.map(n => `
+    <div class="nutrient-row">
+      <span class="nutrient-name">${n.n}</span>
+      <span><span class="nutrient-val">${n.v}</span><span class="nutrient-dv">${n.dv ? 'DV ' + n.dv : ''}</span></span>
+    </div>`).join('');
+
+            document.getElementById('nutritionResult').style.display = 'block';
+            document.getElementById('scanLoading').classList.remove('show');
+        }
+
+        /* ─── RENDER COMPARE ─── */
+        function renderCompare() {
+            if (!currentFood) return;
+            const f = FOODS[currentFood];
+            document.getElementById('cmpEmoji').textContent = f.emoji;
+            document.getElementById('cmpName').textContent = f.name;
+
+            const prices = f.prices;
+            const minPrice = Math.min(...prices.map(p => p.price));
+            const maxPrice = Math.max(...prices.map(p => p.price));
+
+            // Price bar chart
+            const chart = document.getElementById('priceChart');
+            chart.innerHTML = prices.map((p, i) => `
+    <div class="price-bar-row" style="animation-delay:${i * .12}s">
+      <div class="pbar-label">${p.app.split(' ')[0]}</div>
+      <div class="pbar-track">
+        <div class="pbar-fill" style="--w:${Math.round((p.price / maxPrice) * 100)}%;width:${Math.round((p.price / maxPrice) * 100)}%;background:${p.price === minPrice ? 'var(--green)' : 'var(--muted)'}"></div>
+      </div>
+      <div class="pbar-val" style="color:${p.price === minPrice ? 'var(--green)' : 'var(--text)'}">₹${p.price}</div>
+    </div>`).join('');
+
+            // App cards
+            const cards = document.getElementById('appCards');
+            cards.innerHTML = prices.map((p, i) => `
+    <div class="app-card ${p.price === minPrice ? 'best' : ''}" onclick="openApp('${p.app}')">
+      <div class="app-top">
+        <div class="app-info">
+          <div class="app-logo" style="background:${p.bg}">${p.logo}</div>
+          <div>
+            <div class="app-name">${p.app}</div>
+            <div class="app-rating">⭐ ${p.rating} · ${p.offers}</div>
+          </div>
+        </div>
+        <div>
+          <div class="app-price">₹${p.price} <span>/unit</span></div>
+          ${p.price === minPrice ? '<div style="text-align:right"><span class="best-badge">BEST PRICE</span></div>' : ''}
+        </div>
+      </div>
+      <div class="app-meta">
+        <div class="meta-pill good">${p.icon} ${p.delivery} min delivery</div>
+        <div class="meta-pill">${p.price === minPrice ? '🏷️ Cheapest' : '📦 In Stock'}</div>
+        <div class="meta-pill ${p.delivery <= 15 ? 'good' : 'warn'}">${p.delivery <= 15 ? '⚡ Express' : '🕐 Standard'}</div>
+      </div>
+    </div>`).join('');
+        }
+
+        function openApp(name) {
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:10px 20px;border-radius:30px;font-family:Syne,sans-serif;font-weight:700;font-size:.85rem;z-index:999;pointer-events:none';
+            t.textContent = `Opening ${name}…`;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2000);
+        }
+
+        /* ─── RENDER DIET ─── */
+        function renderDiet() {
+            selectPlanRender(currentPlan);
+            // Meal timeline
+            const mt = document.getElementById('mealTimeline');
+            mt.innerHTML = MEALS.map(m => `
+    <div class="meal-row">
+      <div class="meal-time">${m.time}</div>
+      <div class="meal-emoji">${m.emoji}</div>
+      <div class="meal-name">${m.name}</div>
+      <div>
+        <div class="meal-cal">${m.cal} kcal</div>
+        <div class="meal-status ${m.status}">${m.status === 'delivered' ? '✓ Delivered' : '🕐 Pending'}</div>
+      </div>
+    </div>`).join('');
+        }
+
+        function selectPlan(key) {
+            currentPlan = key;
+            document.querySelectorAll('.plan-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            selectPlanRender(key);
+        }
+
+        function selectPlanRender(key) {
+            const p = PLANS[key];
+            document.getElementById('planCard').innerHTML = `
+    <div class="plan-card" style="--accent-glow:${p.glow}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:1.6rem">${p.emoji}</span>
+        <div class="plan-name">${p.name}</div>
+      </div>
+      <div class="plan-desc">${p.desc}</div>
+      <div class="plan-features">${p.feats.map(f => `<div class="plan-feat">${f}</div>`).join('')}</div>
+      <div class="plan-price-row">
+        <div class="plan-price" style="color:${p.accent}">${p.price}</div>
+        <div class="plan-period">${p.period}</div>
+      </div>
+      <button class="btn-primary" onclick="subscribePlan('${key}')" style="width:100%;justify-content:center">Subscribe & Start Delivery →</button>
+    </div>`;
+        }
+
+        function subscribePlan(key) {
+            const p = PLANS[key];
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:12px 22px;border-radius:30px;font-family:Syne,sans-serif;font-weight:700;font-size:.85rem;z-index:999;pointer-events:none;text-align:center;white-space:nowrap';
+            t.textContent = `🎉 Subscribed to ${p.name}!`;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        /* ─── INIT ─── */
+        renderDiet();
+    </script>
+</body>
+
+</html>
